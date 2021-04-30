@@ -64,19 +64,18 @@ from torchvision.utils import make_grid
 from torch.utils.tensorboard import SummaryWriter
 import tqdm
 
-from vonenet import get_model
 from vonenet.backends.dcgan_train import DCGANTrainer
+from vonenet.backends.dcgan import Discriminator, Generator
 
 
 set_gpus(FLAGS.ngpus)
-torch.autograd.set_detect_anomaly(True)
 
 device = torch.device('cuda' if is_available() else 'cpu')
 
 
 def train():
-    discriminator, generator = get_model(model_arch=FLAGS.model_arch, image_size=FLAGS.img_size, n_classes=FLAGS.n_classes,
-                                         channels=FLAGS.channels, latent_dim=FLAGS.latent_dim)
+    discriminator = Discriminator()
+    generator = Generator(FLAGS.channels)
 
     if FLAGS.ngpus == 0:
         print('Running on CPU')
@@ -91,7 +90,7 @@ def train():
     else:
         print('No GPU detected!')
 
-    writer = SummaryWriter(f'logs/vone_{FLAGS.model_arch}_test', max_queue=100)
+    writer = SummaryWriter(f'logs/{FLAGS.model_arch}_experiment', max_queue=100)
     trainer = DCGANTrainer(discriminator, generator, device, lr=FLAGS.lr, b1=FLAGS.b1, img_size=FLAGS.img_size,
                            num_workers=FLAGS.workers, batch_size=FLAGS.batch_size, latent_dim=FLAGS.latent_dim)
 

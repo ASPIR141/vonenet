@@ -33,7 +33,7 @@ class DCGANTrainer(object):
 
     def data(self):
         dataset = datasets.MNIST(
-            './',
+            './data',
             train=True,
             download=False,
             transform=transforms.Compose([
