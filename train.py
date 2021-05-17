@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='training')
 
 parser.add_argument('--n_epochs', default=100, type=int,
                     help='number of epochs of training')
-parser.add_argument('--batch_size', default=128, type=int,
+parser.add_argument('--batch_size', default=64, type=int,
                     help='size of batch for training')
 parser.add_argument('--workers', default=2,
                     help='number of data loading workers')
@@ -76,9 +76,12 @@ def set_gpus(n=2):
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
+torch.cuda.empty_cache()
+
 set_gpus(FLAGS.ngpus)
 torch.autograd.set_detect_anomaly(True)
 torch.backends.cudnn.benchmark = True
+# print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
 device = torch.device('cuda' if is_available() else 'cpu')
 
@@ -134,9 +137,9 @@ def main():
 
     data_loader = get_data_loader()
 
-    pipeline = Pipeline(discriminator, generator, g_optimizer, d_optimizer, adversarial_loss,
-                        auxiliary_loss, len(data_loader), FLAGS.n_classes, prefix=f'vone_{FLAGS.model_arch}')
-    pipeline.train(data_loader, FLAGS.epochs)
+    pipeline = Pipeline(discriminator, generator, g_optimizer, d_optimizer, adversarial_loss, auxiliary_loss, len(
+        data_loader), FLAGS.n_classes, latent_dim=FLAGS.latent_dim, device=device, prefix=f'vone_{FLAGS.model_arch}')
+    pipeline.train(data_loader, FLAGS.n_epochs)
 
 
 if __name__ == '__main__':

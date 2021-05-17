@@ -132,5 +132,5 @@ dmypy.json
 images
 .DS_Store
 
-logs
+training-runs
 data
