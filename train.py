@@ -12,8 +12,8 @@ from torch.cuda import is_available
 from torch.utils.data import DataLoader
 from torchvision import datasets
 import torchvision.transforms as transforms
-from pipeline import Pipeline
 from vone.vonenet import VOneNet
+from training.pipeline import Pipeline
 from networks.acgan import Discriminator, Generator
 from networks import weights_init
 
