@@ -22,13 +22,15 @@ class GFB(nn.Module):
         self.padding = (kernel_size // 2, kernel_size // 2)
 
         # Param instatiations
-        self.weight = torch.zeros((out_channels, in_channels, kernel_size, kernel_size))
+        self.weight = torch.zeros(
+            (out_channels, in_channels, kernel_size, kernel_size))
 
     def forward(self, x):
         return F.conv2d(x, self.weight, None, self.stride, self.padding)
 
     def initialize(self, sf, theta, sigx, sigy, phase):
-        random_channel = torch.randint(0, self.in_channels, (self.out_channels,))
+        random_channel = torch.randint(
+            0, self.in_channels, (self.out_channels,))
         for i in range(self.out_channels):
             self.weight[i, random_channel[i]] = gabor_kernel(frequency=sf[i], sigma_x=sigx[i], sigma_y=sigy[i],
                                                              theta=theta[i], offset=phase[i], ks=self.kernel_size[0])
@@ -38,11 +40,10 @@ class GFB(nn.Module):
 class VOneBlock(nn.Module):
     def __init__(self, sf, theta, sigx, sigy, phase,
                  k_exc=25, noise_mode=None, noise_scale=1, noise_level=1,
-                 simple_channels=128, complex_channels=128, ksize=25, stride=4, input_size=224):
+                 simple_channels=128, complex_channels=128, ksize=25, stride=4, input_size=224, in_channels=1):
         super().__init__()
 
-        # self.in_channels = 3
-        self.in_channels = 1
+        self.in_channels = in_channels
 
         self.simple_channels = simple_channels
         self.complex_channels = complex_channels
@@ -60,8 +61,10 @@ class VOneBlock(nn.Module):
         self.set_noise_mode(noise_mode, noise_scale, noise_level)
         self.fixed_noise = None
 
-        self.simple_conv_q0 = GFB(self.in_channels, self.out_channels, ksize, stride)
-        self.simple_conv_q1 = GFB(self.in_channels, self.out_channels, ksize, stride)
+        self.simple_conv_q0 = GFB(
+            self.in_channels, self.out_channels, ksize, stride)
+        self.simple_conv_q1 = GFB(
+            self.in_channels, self.out_channels, ksize, stride)
         self.simple_conv_q0.initialize(sf=self.sf, theta=self.theta, sigx=self.sigx, sigy=self.sigy,
                                        phase=self.phase)
         self.simple_conv_q1.initialize(sf=self.sf, theta=self.theta, sigx=self.sigx, sigy=self.sigy,
@@ -99,7 +102,7 @@ class VOneBlock(nn.Module):
                 x += self.fixed_noise * torch.sqrt(F.relu(x.clone()) + eps)
             else:
                 x += torch.distributions.normal.Normal(torch.zeros_like(x), scale=1).rsample() * \
-                     torch.sqrt(F.relu(x.clone()) + eps)
+                    torch.sqrt(F.relu(x.clone()) + eps)
             x -= self.noise_level
             x /= self.noise_scale
         return self.noise(x)
@@ -110,11 +113,13 @@ class VOneBlock(nn.Module):
         self.noise_level = noise_level
 
     def fix_noise(self, batch_size=256, seed=None):
-        noise_mean = torch.zeros(batch_size, self.out_channels, int(self.input_size/self.stride), int(self.input_size/self.stride))
+        noise_mean = torch.zeros(batch_size, self.out_channels, int(
+            self.input_size/self.stride), int(self.input_size/self.stride))
         if seed:
             torch.manual_seed(seed)
         if self.noise_mode == 'neuronal':
-            self.fixed_noise = torch.distributions.normal.Normal(noise_mean, scale=1).rsample().to(device)
+            self.fixed_noise = torch.distributions.normal.Normal(
+                noise_mean, scale=1).rsample().to(device)
 
     def unfix_noise(self):
         self.fixed_noise = None
