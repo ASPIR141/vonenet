@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class Pipeline(object):
-    def __init__(self, discriminator: nn.Module, generator: nn.Model,
+    def __init__(self, discriminator: nn.Module, generator: nn.Module,
                  g_optimizer: optim.Optimizer, d_optimizer: optim.Optimizer, adversarial_loss_fn, auxiliary_loss_fn,
                  dataset_len: int, num_classes: int, sample_interval=10, use_cuda=True, prefix='', use_writer=True):
         self.discriminator = discriminator
@@ -111,15 +111,17 @@ class Pipeline(object):
                     [target.data.cpu(), gen_labels.data.cpu()], axis=0)
                 d_acc = torch.mean(torch.argmax(pred, axis=1) == gt)
 
-                fields = []
-                fields += [f"cpumem {stats_dict['Resources/cpu_mem_gb'], psutil.Process(os.getpid()).memory_info().rss / 2**30):<6.2f}"]
-                fields += [f"gpumem {stats_dict['Resources/peak_gpu_mem_gb'], torch.cuda.max_memory_allocated(self.device) / 2**30):<6.2f}"]
-                print(' '.join(fields))
-
                 stats_dict['Train/d_loss'] += d_loss.item()
                 stats_dict['Train/g_loss'] += g_loss.item()
                 stats_dict['Train/accuracy'] += 100 * d_acc
-                stats_dict['duration'] = time.time() - start
+                stats_dict['Train/duration'] = time.time() - start
+                stats_dict['Resources/cpu_mem_gb'] = psutil.Process(os.getpid()).memory_info().rss / 2**30
+                stats_dict['Resources/peak_gpu_mem_gb'] = torch.cuda.max_memory_allocated(self.device) / 2**30
+                
+                fields = []
+                fields += [f"cpumem {stats_dict['Resources/cpu_mem_gb']:<6.2f}"]
+                fields += [f"gpumem {stats_dict['Resources/peak_gpu_mem_gb']:<6.2f}"]
+                print(' '.join(fields))
 
                 batches_done = epoch * nsteps + step
                 if batches_done % self.sample_interval == 0:

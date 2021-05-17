@@ -87,7 +87,7 @@ def get_data_loader():
     dataset = datasets.CIFAR10(
         './data/CIFAR10',
         train=True,
-        download=False,
+        download=True,
         transform=transforms.Compose([
             transforms.Resize(FLAGS.img_size),
             transforms.ToTensor(),
