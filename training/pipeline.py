@@ -54,7 +54,7 @@ class Pipeline(object):
         stats_dict['accuracy'] = 0.0
 
         if self.use_writer:
-            self.writer = SummaryWriter(f'logs/{self.prefix}', max_queue=100)
+            self.writer = SummaryWriter(f'training-runs/{self.prefix}', max_queue=100)
 
         for epoch in tqdm.trange(0, epochs + 1, initial=0, desc='epoch'):
             for step, (data, target) in enumerate(tqdm.tqdm(data_loader)):
