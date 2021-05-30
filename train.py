@@ -1,4 +1,5 @@
 import os
+import random
 import argparse
 import subprocess
 import io
@@ -22,7 +23,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='training')
 
 
-parser.add_argument('--n_epochs', default=100, type=int,
+parser.add_argument('--n_epochs', default=200, type=int,
                     help='number of epochs of training')
 parser.add_argument('--batch_size', default=64, type=int,
                     help='size of batch for training')
@@ -46,8 +47,12 @@ parser.add_argument('--b2', default=0.999, type=float,
                     help='adam: decay of first order momentum of gradient')
 parser.add_argument('--sample_interval', type=int, default=1000,
                     help='interval between image sampling')
-parser.add_argument('--model_arch', choices=['acgan', 'dcgan'], default='dcgan',
+parser.add_argument('--model_arch', choices=['acgan'], default='acgan',
                     help='back-end model architecture to load')
+parser.add_argument('--manual_seed', default=0, type=int,
+                    help='seed for weights initializations and torch RNG')
+parser.add_argument('--use_cuda', default=True, type=bool,
+                    help='enable CUDA')
 
 FLAGS, FIRE_FLAGS = parser.parse_known_args()
 
@@ -77,6 +82,9 @@ def set_gpus(n=2):
 
 
 torch.cuda.empty_cache()
+
+random.seed(FLAGS.manual_seed)
+torch.manual_seed(FLAGS.manual_seed)
 
 set_gpus(FLAGS.ngpus)
 torch.autograd.set_detect_anomaly(True)
@@ -137,8 +145,10 @@ def main():
 
     data_loader = get_data_loader()
 
-    pipeline = Pipeline(discriminator, generator, g_optimizer, d_optimizer, adversarial_loss, auxiliary_loss, len(
-        data_loader), FLAGS.n_classes, latent_dim=FLAGS.latent_dim, device=device, prefix=f'vone_{FLAGS.model_arch}')
+    pipeline = Pipeline(discriminator, generator, g_optimizer, d_optimizer,
+                        adversarial_loss, auxiliary_loss, len(data_loader),
+                        FLAGS.n_classes, latent_dim=FLAGS.latent_dim, ngpus=FLAGS.ngpus,
+                        device=device, prefix=f'{FLAGS.model_arch}_experiment', use_cuda=FLAGS.use_cuda)
     pipeline.train(data_loader, FLAGS.n_epochs)
 
 
